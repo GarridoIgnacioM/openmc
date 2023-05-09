@@ -113,7 +113,7 @@ void sample_neutron_reaction(Particle& p)
     } else if (settings::run_mode == RunMode::FIXED_SOURCE &&
                settings::create_fission_neutrons) {
       create_fission_sites(p, i_nuclide, rx);
-
+      //CHECKEAR
       // Make sure particle population doesn't grow out of control for
       // subcritical multiplication problems.
       if (p.secondary_bank().size() >= 10000) {

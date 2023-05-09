@@ -42,6 +42,9 @@ void read_particle_restart(Particle& p, RunMode& previous_run_mode)
   } else if (mode == "fixed source") {
     previous_run_mode = RunMode::FIXED_SOURCE;
   }
+  //CHECKEAR
+
+  
   read_dataset(file_id, "id", p.id());
   int type;
   read_dataset(file_id, "type", type);
@@ -96,6 +99,7 @@ void run_particle_restart()
   // Compute random number seed
   int64_t particle_seed;
   switch (previous_run_mode) {
+  case RunMode::CHAR_0:
   case RunMode::EIGENVALUE:
   case RunMode::FIXED_SOURCE:
     particle_seed = (simulation::total_gen + overall_generation() - 1) *

@@ -344,7 +344,9 @@ void read_settings_xml(pugi::xml_node root)
         run_mode = RunMode::EIGENVALUE;
       } else if (temp_str == "fixed source") {
         run_mode = RunMode::FIXED_SOURCE;
-      } else if (temp_str == "plot") {
+      } else if (temp_str == "char-0") {
+        run_mode = RunMode::CHAR_0;
+      }else if (temp_str == "plot") {
         run_mode = RunMode::PLOTTING;
       } else if (temp_str == "particle restart") {
         run_mode = RunMode::PARTICLE;
@@ -365,6 +367,7 @@ void read_settings_xml(pugi::xml_node root)
         run_mode = RunMode::EIGENVALUE;
       } else {
         node_mode = root.child("fixed_source");
+        //CHECKEAR
         if (node_mode) {
           run_mode = RunMode::FIXED_SOURCE;
         } else {
@@ -881,6 +884,7 @@ void read_settings_xml(pugi::xml_node root)
   }
 
   // Check whether create fission sites
+  // CHECKEAR
   if (run_mode == RunMode::FIXED_SOURCE) {
     if (check_for_node(root, "create_fission_neutrons")) {
       create_fission_neutrons =

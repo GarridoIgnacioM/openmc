@@ -1,0 +1,49 @@
+import os
+os.environ['OPENMC_CROSS_SECTIONS'] = '/home/nacho/openmc/data/endfb-vii.1-hdf5/cross_sections.xml'
+import openmc
+
+# Define materials
+deu = openmc.Material(1, 'deuterio', 293.5943174)
+deu.add_nuclide('H2', 1, 'ao')
+deu.set_density('g/cm3', 0.165)
+hid = openmc.Material(2, 'hidrogeno', 293.5943174)
+hid.add_nuclide('H1', 1, 'ao')
+hid.set_density('g/cm3', 0.0165)
+
+# Define geometry
+L=20
+xtop=openmc.XPlane(x0=L/2, boundary_type='vacuum', surface_id=1)
+xbot=openmc.XPlane(x0=-L/2, boundary_type='vacuum', surface_id=2)
+ytop=openmc.YPlane(y0=L/2, boundary_type='vacuum', surface_id=3)
+ybot=openmc.YPlane(y0=-L/2, boundary_type='vacuum', surface_id=4)
+ztop=openmc.ZPlane(z0=L/2, boundary_type='vacuum', surface_id=5)
+zbot=openmc.ZPlane(z0=-L/2, boundary_type='vacuum', surface_id=6)
+region=-xtop & +xbot & -ytop & +ybot & -ztop & +zbot
+cell=openmc.Cell(region=region,fill=deu,cell_id=1)
+univ01 =openmc.Universe(cells= [cell], universe_id=1)
+
+# Define a simple source
+source = openmc.Source(space=openmc.stats.Point())
+
+# Define the tallies
+tally = openmc.Tally(name='neutron flux')
+tally.filters = [openmc.CellFilter(cell)]
+tally.scores = ['flux']
+
+# Define the settings
+settings = openmc.Settings()
+settings.batches = 100
+settings.particles = 1000
+settings.source = source
+
+# Define the model
+model = openmc.model.Model(geometry=univ01, materials=[deu, hid], settings=settings)
+
+# Run the simulation
+results = model.run()
+
+# Get the tally data
+tally_result = results.get_tally(name='neutron flux')
+
+# Plot the flux
+tally_result.mean.flatten()[0].plot()

@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='utf-8'?>
+<tallies>
+  <mesh id="1">
+    <dimension>1 1 1</dimension>
+    <lower_left>-10.0 -10.0 -10.0</lower_left>
+    <upper_right>10.0 10.0 10.0</upper_right>
+  </mesh>
+  <filter id="9" type="energy">
+    <bins>90.0 100.0</bins>
+  </filter>
+  <filter id="10" type="surface">
+    <bins>4</bins>
+  </filter>
+  <filter id="12" type="meshsurface">
+    <bins>1</bins>
+  </filter>
+  <tally id="5" name="Fdet">
+    <filters>9 10</filters>
+    <scores>current</scores>
+    <estimator>analog</estimator>
+  </tally>
+  <tally id="6" name="Fdetmesh">
+    <filters>9 12</filters>
+    <scores>current</scores>
+  </tally>
+</tallies>

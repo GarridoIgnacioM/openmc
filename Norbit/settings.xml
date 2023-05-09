@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='utf-8'?>
+<settings>
+  <run_mode>CHAR-0</run_mode>
+  <particles>1000000</particles>
+  <batches>1</batches>
+  <inactive>0</inactive>
+  <source strength="1.0">
+    <space type="point">
+      <parameters>0 0 0</parameters>
+    </space>
+    <angle type="isotropic" />
+    <energy type="discrete">
+      <parameters>99500.45 1.0</parameters>
+    </energy>
+  </source>
+  <photon_transport>false</photon_transport>
+  <survival_biasing>true</survival_biasing>
+</settings>

@@ -83,6 +83,9 @@ extern "C" int openmc_statepoint_write(const char* filename, bool* write_source)
     write_dataset(file_id, "energy_mode",
       settings::run_CE ? "continuous-energy" : "multi-group");
     switch (settings::run_mode) {
+    case RunMode::CHAR_0:
+      write_dataset(file_id, "run_mode", "CHAR-0");
+      break;
     case RunMode::FIXED_SOURCE:
       write_dataset(file_id, "run_mode", "fixed source");
       break;
@@ -391,6 +394,8 @@ void load_state_point()
     settings::run_mode = RunMode::FIXED_SOURCE;
   } else if (word == "eigenvalue") {
     settings::run_mode = RunMode::EIGENVALUE;
+  } else if (word == "CHAR-0") {
+    settings::run_mode = RunMode::CHAR_0;
   }
   read_attribute(file_id, "photon_transport", settings::photon_transport);
   read_dataset(file_id, "n_particles", settings::n_particles);

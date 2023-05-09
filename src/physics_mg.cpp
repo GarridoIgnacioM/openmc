@@ -49,6 +49,7 @@ void sample_reaction(Particle& p)
           settings::create_fission_neutrons)) {
       create_fission_sites(p);
     }
+    //CHECKEAR
   }
 
   // If survival biasing is being used, the following subroutine adjusts the

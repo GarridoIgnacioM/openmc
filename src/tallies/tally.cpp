@@ -655,7 +655,7 @@ void Tally::accumulate()
   if (mpi::master || !settings::reduce_tallies) {
     // Calculate total source strength for normalization
     double total_source = 0.0;
-    if (settings::run_mode == RunMode::FIXED_SOURCE) {
+    if (settings::run_mode == RunMode::FIXED_SOURCE || settings::run_mode == RunMode::CHAR_0) {
       for (const auto& s : model::external_sources) {
         total_source += s->strength();
       }

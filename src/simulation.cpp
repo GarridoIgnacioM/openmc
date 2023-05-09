@@ -64,6 +64,24 @@ int openmc_run()
   return err;
 }
 
+int char0_run()
+{
+  openmc::simulation::time_total.start();
+  openmc_simulation_init();
+
+  int err = 0;
+  int status = 0;
+  while (status == 0 && err == 0) {
+    err = openmc_next_batch(&status);
+  }
+
+  openmc_simulation_finalize();
+  openmc::simulation::time_total.stop();
+
+  printf("The run mode at the end of the simulation is: %d\n", openmc::settings::run_mode);
+  return err;
+}
+
 int openmc_simulation_init()
 {
   using namespace openmc;
@@ -127,6 +145,7 @@ int openmc_simulation_init()
   }
 
   // Display header
+  // CHECKEAR
   if (mpi::master) {
     if (settings::run_mode == RunMode::FIXED_SOURCE) {
       header("FIXED SOURCE TRANSPORT SIMULATION", 3);
@@ -316,7 +335,7 @@ void initialize_batch()
   // Increment current batch
   ++simulation::current_batch;
 
-  if (settings::run_mode == RunMode::FIXED_SOURCE) {
+  if (settings::run_mode == RunMode::FIXED_SOURCE || settings::run_mode == RunMode::CHAR_0) {
     write_message(6, "Simulating batch {}", simulation::current_batch);
   }
 
@@ -374,10 +393,13 @@ void finalize_batch()
     settings::statepoint_batch.insert(simulation::current_batch);
   }
 
+
   // Write out state point if it's been specified for this batch and is not
   // a CMFD run instance
+  //CHECKEAR: EL PROBLEMA ACA ES QUE contains(settings::statepoint_batch, simulation::current_batch) == FALSE
   if (contains(settings::statepoint_batch, simulation::current_batch) &&
       !settings::cmfd_run) {
+    printf("PRINTEO DE PRUEBA CC\n");
     if (contains(settings::sourcepoint_batch, simulation::current_batch) &&
         settings::source_write && !settings::source_separate) {
       bool b = (settings::run_mode == RunMode::EIGENVALUE);
@@ -492,7 +514,7 @@ void initialize_history(Particle& p, int64_t index_source)
   if (settings::run_mode == RunMode::EIGENVALUE) {
     // set defaults for eigenvalue simulations from primary bank
     p.from_source(&simulation::source_bank[index_source - 1]);
-  } else if (settings::run_mode == RunMode::FIXED_SOURCE) {
+  } else if (settings::run_mode == RunMode::FIXED_SOURCE || settings::run_mode == RunMode::CHAR_0) {
     // initialize random number seed
     int64_t id = (simulation::total_gen + overall_generation() - 1) *
                    settings::n_particles +

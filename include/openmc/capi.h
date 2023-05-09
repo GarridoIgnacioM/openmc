@@ -125,6 +125,7 @@ int openmc_remove_tally(int32_t index);
 int openmc_reset();
 int openmc_reset_timers();
 int openmc_run();
+int char0_run();
 int openmc_sample_external_source(size_t n, uint64_t* seed, void* sites);
 void openmc_set_seed(int64_t new_seed);
 int openmc_set_n_batches(

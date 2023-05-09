@@ -660,6 +660,9 @@ void Particle::write_restart() const
     write_dataset(file_id, "current_generation", simulation::current_gen);
     write_dataset(file_id, "n_particles", settings::n_particles);
     switch (settings::run_mode) {
+    case RunMode::CHAR_0:
+      write_dataset(file_id, "run_mode", "Importance");
+      break;
     case RunMode::FIXED_SOURCE:
       write_dataset(file_id, "run_mode", "fixed source");
       break;
@@ -683,7 +686,7 @@ void Particle::write_restart() const
       write_dataset(file_id, "xyz", simulation::source_bank[i - 1].r);
       write_dataset(file_id, "uvw", simulation::source_bank[i - 1].u);
       write_dataset(file_id, "time", simulation::source_bank[i - 1].time);
-    } else if (settings::run_mode == RunMode::FIXED_SOURCE) {
+    } else if (settings::run_mode == RunMode::FIXED_SOURCE || settings::run_mode == RunMode::CHAR_0) {
       // re-sample using rng random number seed used to generate source particle
       int64_t id = (simulation::total_gen + overall_generation() - 1) *
                      settings::n_particles +

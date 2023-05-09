@@ -20,6 +20,7 @@ from .mesh import _read_meshes
 
 
 class RunMode(Enum):
+    CHAR_0 = 'CHAR-0'
     EIGENVALUE = 'eigenvalue'
     FIXED_SOURCE = 'fixed source'
     PLOT = 'plot'
