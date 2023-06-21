@@ -99,16 +99,19 @@ void Particle::from_source(const SourceSite* src)
   wgt_last() = src->wgt;
   r() = src->r;
   u() = src->u;
+  r_source() = r();
   r_last_current() = src->r;
   r_last() = src->r;
   u_last() = src->u;
   if (settings::run_CE) {
     E() = src->E;
+    Esource() = E();  
     g() = 0;
   } else {
     g() = static_cast<int>(src->E);
     g_last() = static_cast<int>(src->E);
     E() = data::mg.energy_bin_avg_[g()];
+    Esource() = E();  
   }
   E_last() = E();
   time() = src->time;
@@ -456,6 +459,7 @@ void Particle::cross_surface()
   n_coord() = 1;
   bool found = exhaustive_find_cell(*this);
 
+  //CHECKEAR
   if (settings::run_mode != RunMode::PLOTTING && (!found)) {
     // If a cell is still not found, there are two possible causes: 1) there is
     // a void in the model, and 2) the particle hit a surface at a tangent. If
@@ -661,7 +665,7 @@ void Particle::write_restart() const
     write_dataset(file_id, "n_particles", settings::n_particles);
     switch (settings::run_mode) {
     case RunMode::CHAR_0:
-      write_dataset(file_id, "run_mode", "Importance");
+      write_dataset(file_id, "run_mode", "char-0");
       break;
     case RunMode::FIXED_SOURCE:
       write_dataset(file_id, "run_mode", "fixed source");

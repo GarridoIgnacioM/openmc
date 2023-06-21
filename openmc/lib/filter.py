@@ -18,7 +18,7 @@ from .mesh import _get_mesh
 __all__ = [
     'Filter', 'AzimuthalFilter', 'CellFilter', 'CellbornFilter', 'CellfromFilter',
     'CellInstanceFilter', 'CollisionFilter', 'DistribcellFilter', 'DelayedGroupFilter',
-    'EnergyFilter', 'EnergyoutFilter', 'EnergyFunctionFilter', 'LegendreFilter',
+    'EnergyFilter', 'EnergyCharFilter', 'EnergyoutFilter', 'EnergyFunctionFilter', 'LegendreFilter',
     'MaterialFilter', 'MeshFilter', 'MeshSurfaceFilter', 'MuFilter', 'ParticleFilter',
     'PolarFilter', 'SphericalHarmonicsFilter', 'SpatialLegendreFilter', 'SurfaceFilter',
     'UniverseFilter', 'ZernikeFilter', 'ZernikeRadialFilter', 'filters'
@@ -177,6 +177,30 @@ class EnergyFilter(Filter):
         energies = POINTER(c_double)()
         n = c_size_t()
         _dll.openmc_energy_filter_get_bins(self._index, energies, n)
+        return as_array(energies, (n.value,))
+
+    @bins.setter
+    def bins(self, bins):
+        # Get numpy array as a double*
+        energies = np.asarray(bins)
+        energies_p = energies.ctypes.data_as(POINTER(c_double))
+
+        _dll.openmc_energy_filter_set_bins(
+            self._index, len(energies), energies_p)
+        
+class EnergyCharFilter(Filter):
+    filter_type = 'energychar'
+
+    def __init__(self, bins=None, uid=None, new=True, index=None):
+        super().__init__(uid, new, index)
+        if bins is not None:
+            self.bins = bins
+
+    @property
+    def bins(self):
+        energies = POINTER(c_double)()
+        n = c_size_t()
+        _dll.openmc_energy_filter_get_bins(self._index, energies, n)  #CHECKEAR
         return as_array(energies, (n.value,))
 
     @bins.setter
@@ -481,6 +505,7 @@ _FILTER_TYPE_MAP = {
     'delayedgroup': DelayedGroupFilter,
     'distribcell': DistribcellFilter,
     'energy': EnergyFilter,
+    'energychar': EnergyCharFilter,
     'energyout': EnergyoutFilter,
     'energyfunction': EnergyFunctionFilter,
     'legendre': LegendreFilter,

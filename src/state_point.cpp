@@ -53,6 +53,8 @@ extern "C" int openmc_statepoint_write(const char* filename, bool* write_source)
   // Write message
   write_message("Creating state point " + filename_ + "...", 5);
 
+  write_message("HOLA", 5);
+
   hid_t file_id;
   if (mpi::master) {
     // Create statepoint file
@@ -84,7 +86,7 @@ extern "C" int openmc_statepoint_write(const char* filename, bool* write_source)
       settings::run_CE ? "continuous-energy" : "multi-group");
     switch (settings::run_mode) {
     case RunMode::CHAR_0:
-      write_dataset(file_id, "run_mode", "CHAR-0");
+      write_dataset(file_id, "run_mode", "char-0"); //CHECKEAR VA EN MAYUSC O MINUSC??
       break;
     case RunMode::FIXED_SOURCE:
       write_dataset(file_id, "run_mode", "fixed source");
@@ -394,7 +396,7 @@ void load_state_point()
     settings::run_mode = RunMode::FIXED_SOURCE;
   } else if (word == "eigenvalue") {
     settings::run_mode = RunMode::EIGENVALUE;
-  } else if (word == "CHAR-0") {
+  } else if (word == "char-0") {    //CHECKEAR VA EN MAYUSC O MINUSC??
     settings::run_mode = RunMode::CHAR_0;
   }
   read_attribute(file_id, "photon_transport", settings::photon_transport);

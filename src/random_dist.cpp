@@ -1,5 +1,5 @@
 #include "openmc/random_dist.h"
-
+#include <cstdio>
 #include <cmath>
 
 #include "openmc/constants.h"
@@ -24,6 +24,19 @@ double maxwell_spectrum(double T, uint64_t* seed)
 
   // Determine outgoing energy
   return -T * (std::log(r1) + std::log(r2) * c * c);
+}
+
+double swap_spectrum(double tswap, double eminswap, double emaxswap, uint64_t* seed)
+{
+  // Set the random numbers
+  double r1, r2, sampleswap;
+	do
+	{
+    r1 = prn(seed);
+    r2 = prn(seed);
+    sampleswap = (-1.0)*8.617333e-5*tswap*log(r1*r2);
+	} while (eminswap > sampleswap || sampleswap > emaxswap);
+	return sampleswap;
 }
 
 double watt_spectrum(double a, double b, uint64_t* seed)

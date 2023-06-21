@@ -113,6 +113,8 @@ Filter* Filter::create(const std::string& type, int32_t id)
     return Filter::create<EnergyFunctionFilter>(id);
   } else if (type == "energy") {
     return Filter::create<EnergyFilter>(id);
+  } else if (type == "energychar") {
+    return Filter::create<EnergyCharFilter>(id);
   } else if (type == "collision") {
     return Filter::create<CollisionFilter>(id);
   } else if (type == "energyout") {
@@ -123,6 +125,8 @@ Filter* Filter::create(const std::string& type, int32_t id)
     return Filter::create<MaterialFilter>(id);
   } else if (type == "mesh") {
     return Filter::create<MeshFilter>(id);
+  } else if (type == "meshchar") {
+    return Filter::create<MeshCharFilter>(id);
   } else if (type == "meshsurface") {
     return Filter::create<MeshSurfaceFilter>(id);
   } else if (type == "mu") {

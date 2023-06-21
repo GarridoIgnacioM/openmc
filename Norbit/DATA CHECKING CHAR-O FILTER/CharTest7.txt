@@ -1,0 +1,2 @@
+surface	energy low [eV]	energy high [eV]	nuclide	score	mean	std. dev.
+4	0.0	100.0	total	current	-0.003662949716932129	7.077304784863507e-06

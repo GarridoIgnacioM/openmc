@@ -45,6 +45,14 @@ extern "C" double maxwell_spectrum(double T, uint64_t* seed);
 //! \return The sampled outgoing energy
 //==============================================================================
 
+extern "C" double swap_spectrum(double tswap, double eminswap, double emaxswap, uint64_t* seed);
+
+//==============================================================================
+//! Samples an energy for swap, if you want an explanation, call me baby.
+//! @garrido.im on instagram.
+//! Norbit mi buen amigo, esta campaña volveremos a estar contigo.
+//==============================================================================
+
 extern "C" double watt_spectrum(double a, double b, uint64_t* seed);
 
 //==============================================================================

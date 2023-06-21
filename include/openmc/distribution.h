@@ -158,6 +158,29 @@ private:
   double theta_; //!< Factor in exponential [eV]
 };
 
+
+//==============================================================================
+//! SWAP distribution over the interval [a,b] with exponent n : p(x)=c x^n
+//==============================================================================
+
+class swap : public Distribution {
+public:
+  explicit swap(pugi::xml_node node);
+  swap(double tswap, double eminswap, double emaxswap)
+    : tswap_ {tswap}, eminswap_ {eminswap}, emaxswap_ {emaxswap} {};
+
+  //! Sample a value from the distribution
+  //! \param seed Pseudorandom number seed pointer
+  //! \return Sampled value
+  double sample(uint64_t* seed) const override;
+
+private:
+  //! Store processed values in object to allow for faster sampling
+  double tswap_; //!< a^(n+1)
+  double eminswap_;   //!< b^(n+1) - a^(n+1)
+  double emaxswap_;   //!< 1/(n+1)
+};
+
 //==============================================================================
 //! Watt fission spectrum with form c*exp(-E/a)*sinh(sqrt(b*E))
 //==============================================================================

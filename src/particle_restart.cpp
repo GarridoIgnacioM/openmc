@@ -41,6 +41,8 @@ void read_particle_restart(Particle& p, RunMode& previous_run_mode)
     previous_run_mode = RunMode::EIGENVALUE;
   } else if (mode == "fixed source") {
     previous_run_mode = RunMode::FIXED_SOURCE;
+  } else if (mode == "char-0") {
+    previous_run_mode = RunMode::CHAR_0;
   }
   //CHECKEAR
 

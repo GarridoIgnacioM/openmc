@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<materials>
+  <cross_sections>/home/nacho/openmc/data/endfb-vii.1-hdf5/cross_sections.xml</cross_sections>
+  <material id="1" name="deuterio" temperature="293.5943174">
+    <density units="atom/cm3" value="5.974523915151516e+21" />
+    <nuclide ao="1" name="H2" />
+  </material>
+</materials>

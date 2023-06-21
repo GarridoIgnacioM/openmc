@@ -20,7 +20,7 @@ from ._xml import get_text
 
 
 _FILTER_TYPES = (
-    'universe', 'material', 'cell', 'cellborn', 'surface', 'mesh', 'energy',
+    'universe', 'material', 'cell', 'cellborn', 'surface', 'mesh', 'meshchar', 'energy',
     'energyout', 'mu', 'polar', 'azimuthal', 'distribcell', 'delayedgroup',
     'energyfunction', 'cellfrom', 'legendre', 'spatiallegendre',
     'sphericalharmonics', 'zernike', 'zernikeradial', 'particle', 'cellinstance',
@@ -958,6 +958,202 @@ class MeshFilter(Filter):
         if translation:
             out.translation = [float(x) for x in translation.split()]
         return out
+    
+class MeshCharFilter(Filter):
+    """Bins tally event locations by mesh elements.
+
+    Parameters
+    ----------
+    mesh : openmc.MeshBase
+        The mesh object that events will be tallied onto
+    filter_id : int
+        Unique identifier for the filter
+
+    Attributes
+    ----------
+    mesh : openmc.MeshBase
+        The mesh object that events will be tallied onto
+    id : int
+        Unique identifier for the filter
+    translation : Iterable of float
+        This array specifies a vector that is used to translate (shift)
+        the mesh for this filter
+    bins : list of tuple
+        A list of mesh indices for each filter bin, e.g. [(1, 1, 1), (2, 1, 1),
+        ...]
+    num_bins : Integral
+        The number of filter bins
+
+    """
+
+    def __init__(self, mesh, filter_id=None):
+        self.mesh = mesh
+        self.id = filter_id
+        self._translation = None
+
+    def __hash__(self):
+        string = type(self).__name__ + '\n'
+        string += '{: <16}=\t{}\n'.format('\tMesh ID', self.mesh.id)
+        return hash(string)
+
+    def __repr__(self):
+        string = type(self).__name__ + '\n'
+        string += '{: <16}=\t{}\n'.format('\tMesh ID', self.mesh.id)
+        string += '{: <16}=\t{}\n'.format('\tID', self.id)
+        string += '{: <16}=\t{}\n'.format('\tTranslation', self.translation)
+        return string
+
+    @classmethod
+    def from_hdf5(cls, group, **kwargs):
+        if group['type'][()].decode() != cls.short_name.lower():
+            raise ValueError("Expected HDF5 data for filter type '"
+                             + cls.short_name.lower() + "' but got '"
+                             + group['type'][()].decode() + " instead")
+
+        if 'meshes' not in kwargs:
+            raise ValueError(cls.__name__ + " requires a 'meshes' keyword "
+                             "argument.")
+
+        mesh_id = group['bins'][()]
+        mesh_obj = kwargs['meshes'][mesh_id]
+        filter_id = int(group.name.split('/')[-1].lstrip('filter '))
+
+
+        out = cls(mesh_obj, filter_id=filter_id)
+
+        translation = group.get('translation')
+        if translation:
+            out.translation = translation[()]
+
+        return out
+
+    @property
+    def mesh(self):
+        return self._mesh
+
+    @mesh.setter
+    def mesh(self, mesh):
+        cv.check_type('filter mesh', mesh, openmc.MeshBase)
+        self._mesh = mesh
+        if isinstance(mesh, openmc.UnstructuredMesh):
+            if mesh.volumes is None:
+                self.bins = []
+            else:
+                self.bins = list(range(len(mesh.volumes)))
+        else:
+            self.bins = list(mesh.indices)
+
+    @property
+    def shape(self):
+        if isinstance(self, MeshSurfaceFilter):
+            return (self.num_bins,)
+        return self.mesh.dimension
+
+    @property
+    def translation(self):
+        return self._translation
+
+    @translation.setter
+    def translation(self, t):
+        cv.check_type('mesh filter translation', t, Iterable, Real)
+        cv.check_length('mesh filter translation', t, 3)
+        self._translation = np.asarray(t)
+
+    def can_merge(self, other):
+        # Mesh filters cannot have more than one bin
+        return False
+
+    def get_pandas_dataframe(self, data_size, stride, **kwargs):
+        """Builds a Pandas DataFrame for the Filter's bins.
+
+        This method constructs a Pandas DataFrame object for the filter with
+        columns annotated by filter bin information. This is a helper method for
+        :meth:`Tally.get_pandas_dataframe`.
+
+        Parameters
+        ----------
+        data_size : int
+            The total number of bins in the tally corresponding to this filter
+        stride : int
+            Stride in memory for the filter
+
+        Returns
+        -------
+        pandas.DataFrame
+            A Pandas DataFrame with three columns describing the x,y,z mesh
+            cell indices corresponding to each filter bin.  The number of rows
+            in the DataFrame is the same as the total number of bins in the
+            corresponding tally, with the filter bin appropriately tiled to map
+            to the corresponding tally bins.
+
+        See also
+        --------
+        Tally.get_pandas_dataframe(), CrossFilter.get_pandas_dataframe()
+
+        """
+        # Initialize Pandas DataFrame
+        df = pd.DataFrame()
+
+        # Initialize dictionary to build Pandas Multi-index column
+        filter_dict = {}
+
+        # Append mesh ID as outermost index of multi-index
+        mesh_key = f'mesh {self.mesh.id}'
+
+        # Find mesh dimensions - use 3D indices for simplicity
+        n_dim = len(self.mesh.dimension)
+        if n_dim == 3:
+            nx, ny, nz = self.mesh.dimension
+        elif n_dim == 2:
+            nx, ny = self.mesh.dimension
+            nz = 1
+        else:
+            nx = self.mesh.dimension
+            ny = nz = 1
+
+        # Generate multi-index sub-column for x-axis
+        filter_dict[mesh_key, 'x'] = _repeat_and_tile(
+            np.arange(1, nx + 1), stride, data_size)
+
+        # Generate multi-index sub-column for y-axis
+        filter_dict[mesh_key, 'y'] = _repeat_and_tile(
+            np.arange(1, ny + 1), nx * stride, data_size)
+
+        # Generate multi-index sub-column for z-axis
+        filter_dict[mesh_key, 'z'] = _repeat_and_tile(
+            np.arange(1, nz + 1), nx * ny * stride, data_size)
+
+        # Initialize a Pandas DataFrame from the mesh dictionary
+        df = pd.concat([df, pd.DataFrame(filter_dict)])
+
+        return df
+
+    def to_xml_element(self):
+        """Return XML Element representing the Filter.
+
+        Returns
+        -------
+        element : xml.etree.ElementTree.Element
+            XML element containing filter data
+
+        """
+        element = super().to_xml_element()
+        element[0].text = str(self.mesh.id)
+        if self.translation is not None:
+            element.set('translation', ' '.join(map(str, self.translation)))
+        return element
+
+    @classmethod
+    def from_xml_element(cls, elem, **kwargs):
+        mesh_id = int(get_text(elem, 'bins'))
+        mesh_obj = kwargs['meshes'][mesh_id]
+        filter_id = int(elem.get('id'))
+        out = cls(mesh_obj, filter_id=filter_id)
+
+        translation = elem.get('translation')
+        if translation:
+            out.translation = [float(x) for x in translation.split()]
+        return out
 
 
 class MeshSurfaceFilter(MeshFilter):
@@ -1401,6 +1597,112 @@ class EnergyFilter(RealFilter):
         """
 
         return cls(openmc.mgxs.GROUP_STRUCTURES[group_structure.upper()])
+
+
+
+class EnergyCharFilter(RealFilter):
+    """Bins tally events based on incident particle energy.
+
+    Parameters
+    ----------
+    values : Iterable of Real
+        A list of values for which each successive pair constitutes a range of
+        energies in [eV] for a single bin
+    filter_id : int
+        Unique identifier for the filter
+
+    Attributes
+    ----------
+    values : numpy.ndarray
+        An array of values for which each successive pair constitutes a range of
+        energies in [eV] for a single bin
+    id : int
+        Unique identifier for the filter
+    bins : numpy.ndarray
+        An array of shape (N, 2) where each row is a pair of energies in [eV]
+        for a single filter bin
+    num_bins : int
+        The number of filter bins
+
+    """
+    units = 'eV'
+
+    def get_bin_index(self, filter_bin):
+        # Use lower energy bound to find index for RealFilters
+        deltas = np.abs(self.bins[:, 1] - filter_bin[1]) / filter_bin[1]
+        min_delta = np.min(deltas)
+        if min_delta < 1E-3:
+            return deltas.argmin()
+        else:
+            msg = ('Unable to get the bin index for Filter since '
+                   f'"{filter_bin}" is not one of the bins')
+            raise ValueError(msg)
+
+    def check_bins(self, bins):
+        super().check_bins(bins)
+        for v0, v1 in bins:
+            cv.check_greater_than('filter value', v0, 0., equality=True)
+            cv.check_greater_than('filter value', v1, 0., equality=True)
+
+    def get_tabular(self, values, **kwargs):
+        """Create a tabulated distribution based on tally results with an energy filter
+
+        This method provides an easy way to create a distribution in energy
+        (e.g., a source spectrum) based on tally results that were obtained from
+        using an :class:`~openmc.EnergyFilter`.
+
+        .. versionadded:: 0.13.3
+
+        Parameters
+        ----------
+        values : iterable of float
+            Array of numeric values, typically from a tally result
+        **kwargs
+            Keyword arguments passed to :class:`openmc.stats.Tabular`
+
+        Returns
+        -------
+        openmc.stats.Tabular
+            Tabular distribution with histogram interpolation
+        """
+
+        probabilities = np.array(values, dtype=float)
+        probabilities /= probabilities.sum()
+
+        # Determine probability per eV, adding extra 0 at the end since it is a histogram
+        probability_per_ev = probabilities / np.diff(self.values)
+        probability_per_ev = np.append(probability_per_ev, 0.0)
+
+        kwargs.setdefault('interpolation', 'histogram')
+        return openmc.stats.Tabular(self.values, probability_per_ev, **kwargs)
+
+    @property
+    def lethargy_bin_width(self):
+        """Calculates the base 10 log width of energy bins which is useful when
+        plotting the normalized flux.
+
+        Returns
+        -------
+        numpy.array
+            Array of bin widths
+        """
+        return np.log10(self.bins[:, 1]/self.bins[:, 0])
+
+    @classmethod
+    def from_group_structure(cls, group_structure):
+        """Construct an EnergyFilter instance from a standard group structure.
+
+        .. versionadded:: 0.13.1
+
+        Parameters
+        ----------
+        group_structure : str
+            Name of the group structure. Must be a valid key of
+            openmc.mgxs.GROUP_STRUCTURES dictionary.
+
+        """
+
+        return cls(openmc.mgxs.GROUP_STRUCTURES[group_structure.upper()])   
 
 
 class EnergyoutFilter(EnergyFilter):

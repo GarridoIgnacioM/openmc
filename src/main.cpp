@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
 
   // start problem based on mode
   switch (settings::run_mode) {
-  case RunMode::CHAR_0: 
+  case RunMode::CHAR_0:
     err = char0_run();
     break;
   case RunMode::FIXED_SOURCE:

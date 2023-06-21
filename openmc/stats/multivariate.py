@@ -8,7 +8,7 @@ import numpy as np
 
 import openmc.checkvalue as cv
 from .._xml import get_text
-from .univariate import Univariate, Uniform, PowerLaw
+from .univariate import Univariate, Uniform, PowerLaw, swap
 from ..mesh import MeshBase
 
 

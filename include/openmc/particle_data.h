@@ -244,6 +244,7 @@ private:
 
   // Energy data
   double E_;      //!< post-collision energy in eV
+  double Esource_; //!< birth's energy in eV
   double E_last_; //!< pre-collision energy in eV
   int g_ {0};     //!< post-collision energy group (MG only)
   int g_last_;    //!< pre-collision energy group (MG only)
@@ -255,6 +256,7 @@ private:
   double time_last_ {0.0}; //!< previous time in [s]
 
   // Other physical data
+  Position r_source_; //!< birth position
   Position r_last_current_; //!< coordinates of the last collision or
                             //!< reflective/periodic surface crossing for
                             //!< current tallies
@@ -370,6 +372,8 @@ public:
 
   double& E() { return E_; }
   const double& E() const { return E_; }
+  double& Esource() { return Esource_; }
+  const double& Esource() const { return Esource_; }
   double& E_last() { return E_last_; }
   const double& E_last() const { return E_last_; }
   int& g() { return g_; }
@@ -387,6 +391,8 @@ public:
   const double& time_last() const { return time_last_; }
   bool alive() const { return wgt_ != 0.0; }
 
+  Position& r_source() { return r_source_; }
+  const Position& r_source() const { return r_source_; }
   Position& r_last_current() { return r_last_current_; }
   const Position& r_last_current() const { return r_last_current_; }
   Position& r_last() { return r_last_; }

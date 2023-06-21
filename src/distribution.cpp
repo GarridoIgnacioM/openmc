@@ -196,6 +196,29 @@ double Maxwell::sample(uint64_t* seed) const
   return maxwell_spectrum(theta_, seed);
 }
 
+
+//==============================================================================
+// SWAP implementation
+//==============================================================================
+
+swap::swap(pugi::xml_node node)
+{
+  auto params = get_node_array<double>(node, "parameters");
+  if (params.size() != 3) {
+    fatal_error("SWAP distribution must have three "
+                "parameters specified.");
+  }
+  tswap_ = params.at(0); 
+  eminswap_ = params.at(1);   
+  emaxswap_ = params.at(2); 
+}
+
+double swap::sample(uint64_t* seed) const
+{
+  return swap_spectrum(tswap_, eminswap_, emaxswap_, seed);
+}
+
+
 //==============================================================================
 // Watt implementation
 //==============================================================================
@@ -429,6 +452,8 @@ UPtrDist distribution_from_xml(pugi::xml_node node)
     dist = UPtrDist {new PowerLaw(node)};
   } else if (type == "maxwell") {
     dist = UPtrDist {new Maxwell(node)};
+  } else if (type == "swap") {
+    dist = UPtrDist {new swap(node)};
   } else if (type == "watt") {
     dist = UPtrDist {new Watt(node)};
   } else if (type == "normal") {

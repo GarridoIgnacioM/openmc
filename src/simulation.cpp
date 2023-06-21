@@ -66,6 +66,8 @@ int openmc_run()
 
 int char0_run()
 {
+
+
   openmc::simulation::time_total.start();
   openmc_simulation_init();
 
@@ -81,6 +83,32 @@ int char0_run()
   printf("The run mode at the end of the simulation is: %d\n", openmc::settings::run_mode);
   return err;
 }
+
+/*int char0_run(int posiciones)
+{
+  openmc::simulation::time_total.start();
+  
+  for (size_t i = 0; i < posiciones; i++)
+  {
+    openmc_simulation_init();
+    int err = 0;
+    int status = 0;
+    while (status == 0 && err == 0) {
+      err = openmc_next_batch(&status);
+    }
+    openmc_simulation_finalize();
+
+
+    //Cambio nombre al statepoint, seguramente se puede hacer mejor
+    std::string sp_file = "statepoint." + std::to_string(batches) + ".h5";
+    std::string new_sp_file = "statepoint." + std::to_string(energy) + ".h5";
+    std::string mv_cmd = "mv " + sp_file + " " + new_sp_file;
+    std::system(mv_cmd.c_str());
+  }
+  
+  openmc::simulation::time_total.stop();
+  return err;
+}*/
 
 int openmc_simulation_init()
 {
@@ -153,6 +181,8 @@ int openmc_simulation_init()
       header("K EIGENVALUE SIMULATION", 3);
       if (settings::verbosity >= 7)
         print_columns();
+    } else if (settings::run_mode == RunMode::CHAR_0  ) {
+      header("CHAR-0 SIMULATION", 3);
     }
   }
 
@@ -244,6 +274,8 @@ int openmc_next_batch(int* status)
     } else {
       transport_history_based();
     }
+
+    
 
     // Accumulate time for transport
     simulation::time_transport.stop();
@@ -398,13 +430,15 @@ void finalize_batch()
   // a CMFD run instance
   //CHECKEAR: EL PROBLEMA ACA ES QUE contains(settings::statepoint_batch, simulation::current_batch) == FALSE
   if (contains(settings::statepoint_batch, simulation::current_batch) &&
+  //if (settings::n_batches == simulation::current_batch &&
       !settings::cmfd_run) {
-    printf("PRINTEO DE PRUEBA CC\n");
     if (contains(settings::sourcepoint_batch, simulation::current_batch) &&
         settings::source_write && !settings::source_separate) {
+      printf("Número de batch: %d\n", simulation::current_batch);
       bool b = (settings::run_mode == RunMode::EIGENVALUE);
       openmc_statepoint_write(nullptr, &b);
     } else {
+      printf("Número de batch: %d\n", simulation::current_batch);
       bool b = false;
       openmc_statepoint_write(nullptr, &b);
     }

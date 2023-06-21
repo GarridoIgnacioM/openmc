@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='utf-8'?>
+<settings>
+  <run_mode>char-0</run_mode>
+  <particles>1000000000</particles>
+  <batches>10</batches>
+  <inactive>0</inactive>
+  <source strength="1.0">
+    <space type="cartesian">
+      <x parameters="-10.0 10.0" type="uniform" />
+      <y parameters="-10.0 10.0" type="uniform" />
+      <z parameters="-10.0 -10.0" type="uniform" />
+    </space>
+    <angle reference_uvw="0.0 0.0 1.0" type="mu-phi">
+      <mu interpolation="linear-linear" type="tabular">
+        <parameters>0.0 1.0 0.0 2.0</parameters>
+      </mu>
+      <phi parameters="0 6.283185307179586" type="uniform" />
+    </angle>
+    <energy parameters="294.0 0.0 0.0253" type="swap" />
+  </source>
+  <photon_transport>false</photon_transport>
+  <survival_biasing>true</survival_biasing>
+</settings>

@@ -50,6 +50,8 @@ class Univariate(EqualityMixin, ABC):
             return PowerLaw.from_xml_element(elem)
         elif distribution == 'maxwell':
             return Maxwell.from_xml_element(elem)
+        elif distribution == 'swap':
+            return swap.from_xml_element(elem)
         elif distribution == 'watt':
             return Watt.from_xml_element(elem)
         elif distribution == 'normal':
@@ -535,6 +537,112 @@ class Maxwell(Univariate):
         theta = float(get_text(elem, 'parameters'))
         return cls(theta)
 
+class swap(Univariate):
+    r"""Distribution weighted by an maxwellian distribution to achieve SWAP method.
+
+    .. versionadded:: JerryDios
+
+    Parameters
+    ----------
+    tswap : temperature of the swap method (K)
+
+    eminswap : minimum energy of the swap method (eV)
+
+    emaxswap : maximum energy of the swap method (eV)
+
+    Attributes
+    ----------
+    tswap : float
+        Temperature of the swap method (K)
+    eminswap : float
+        Minimum energy of the swap method (eV)
+    emaxswap : float
+        Maximum energy of the swap method (eV)
+
+    """
+
+    def __init__(self, tswap=297.15, eminswap=0, emaxswap=0.025):
+        self.tswap = tswap
+        self.eminswap = eminswap
+        self.emaxswap = emaxswap
+
+    def __len__(self):
+        return 3
+
+    @property
+    def tswap(self):
+        return self._tswap
+
+    @property
+    def eminswap(self):
+        return self._eminswap
+
+    @property
+    def emaxswap(self):
+        return self._emaxswap
+
+    @tswap.setter
+    def tswap(self, tswap):
+        cv.check_type('Temperature of the swap method (K)', tswap, Real)
+        self._tswap = tswap
+
+    @eminswap.setter
+    def eminswap(self, eminswap):
+        cv.check_type('Minimum energy of the swap method (eV)', eminswap, Real)
+        self._eminswap = eminswap
+
+    @emaxswap.setter
+    def emaxswap(self, emaxswap):
+        cv.check_type('Maximum energy of the swap method (eV)', emaxswap, Real)
+        self._emaxswap = emaxswap
+
+    def sample(self, n_samples=1, seed=None):
+        np.random.seed(seed)
+
+        while True:
+            r1 = np.random.random()
+            r2 = np.random.random()
+            swapsample = (-1.0)*8.617333e-5*self.tswap*np.log(r1*r2)
+            if self.eminswap < swapsample < self.emaxswap:
+                return swapsample
+        
+
+    def to_xml_element(self, element_name):
+        """Return XML representation of the power law distribution
+
+        Parameters
+        ----------
+        element_name : str
+            XML element name
+
+        Returns
+        -------
+        element : xml.etree.ElementTree.Element
+            XML element containing distribution data
+
+        """
+        element = ET.Element(element_name)
+        element.set("type", "swap")
+        element.set("parameters", f'{self.tswap} {self.eminswap} {self.emaxswap}')
+        return element
+
+    @classmethod
+    def from_xml_element(cls, elem):
+        """Generate power law distribution from an XML element
+
+        Parameters
+        ----------
+        elem : xml.etree.ElementTree.Element
+            XML element
+
+        Returns
+        -------
+        openmc.stats.swap
+            Distribution generated from XML element
+
+        """
+        params = get_text(elem, 'parameters').split()
+        return cls(*map(float, params))
 
 class Watt(Univariate):
     r"""Watt fission energy spectrum.
